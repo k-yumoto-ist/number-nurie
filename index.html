@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>すうじシールの はなたば</title>
+    <link rel="stylesheet" href="./style.css">
+  </head>
+  <body>
+    <main class="app" aria-live="polite">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">すうじシール</p>
+          <h1>はなたばを つくろう</h1>
+        </div>
+        <button class="reset-button" type="button" id="resetButton">もういちど</button>
+      </header>
+
+      <nav class="stage-picker" id="stagePicker" aria-label="絵柄を選ぶ"></nav>
+
+      <section class="play-area" aria-label="数字の順番にシールを貼る花束">
+        <div class="svg-wrap">
+          <svg
+            id="picture"
+            class="picture"
+            viewBox="0 0 900 680"
+            role="img"
+            aria-labelledby="pictureTitle pictureDesc"
+          >
+            <title id="pictureTitle">ステンドグラス風の花束</title>
+            <desc id="pictureDesc">番号のついたパーツを順番に押すと色が入ります。</desc>
+            <defs>
+              <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+                <feDropShadow dx="0" dy="8" stdDeviation="7" flood-color="#68a7c5" flood-opacity="0.22"></feDropShadow>
+              </filter>
+              <pattern id="paperDots" width="26" height="26" patternUnits="userSpaceOnUse">
+                <circle cx="4" cy="4" r="2.1" fill="#d7f3f9" opacity="0.75"></circle>
+              </pattern>
+            </defs>
+            <rect class="paper-bg" x="24" y="24" width="852" height="632" rx="36"></rect>
+            <g id="sparkles" class="sparkles" aria-hidden="true"></g>
+            <g id="partsLayer" filter="url(#softShadow)"></g>
+            <g id="labelsLayer" class="labels-layer" aria-hidden="true"></g>
+          </svg>
+        </div>
+      </section>
+
+      <footer class="status-panel">
+        <div class="next-card" id="nextCard">
+          <span class="next-label" id="nextLabel">つぎは</span>
+          <strong id="nextNumber">1ばん</strong>
+        </div>
+        <div class="message" id="message">1ばんを さがしてね</div>
+      </footer>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
