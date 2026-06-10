@@ -34,13 +34,13 @@ function withNumbers(parts) {
 }
 
 function spreadLabels(parts) {
-  const minDistance = 62;
+  const minDistance = 72;
   const labels = parts.map((part) => ({
     anchor: [...part.label],
     label: [...part.label]
   }));
 
-  for (let iteration = 0; iteration < 120; iteration += 1) {
+  for (let iteration = 0; iteration < 160; iteration += 1) {
     for (let i = 0; i < labels.length; i += 1) {
       for (let j = i + 1; j < labels.length; j += 1) {
         const a = labels[i].label;
@@ -66,8 +66,8 @@ function spreadLabels(parts) {
     }
 
     labels.forEach((entry) => {
-      entry.label[0] += (entry.anchor[0] - entry.label[0]) * 0.025;
-      entry.label[1] += (entry.anchor[1] - entry.label[1]) * 0.025;
+      entry.label[0] += (entry.anchor[0] - entry.label[0]) * 0.015;
+      entry.label[1] += (entry.anchor[1] - entry.label[1]) * 0.015;
       entry.label[0] = Math.min(844, Math.max(56, entry.label[0]));
       entry.label[1] = Math.min(642, Math.max(42, entry.label[1]));
     });
@@ -487,7 +487,7 @@ function renderParts() {
       role: "button",
       "data-number": part.number
     });
-    const badgeRadius = part.number >= 10 ? 26 : 24;
+    const badgeRadius = part.number >= 10 ? 29 : 27;
     const badge = createSvgElement("circle", {
       class: "number-badge",
       cx: labelX,
@@ -498,7 +498,7 @@ function renderParts() {
       class: "number-hit",
       cx: labelX,
       cy: labelY,
-      r: 40
+      r: 46
     });
     const label = createSvgElement("text", {
       class: "part-label",
