@@ -4,6 +4,14 @@ function withNumbers(parts) {
   return parts.map((part, index) => ({ ...part, number: index + 1 }));
 }
 
+function withoutNumbers(parts) {
+  return parts.map(({ number, ...part }) => part);
+}
+
+function makeModeParts(stage, limit, extraParts = []) {
+  return withNumbers([...withoutNumbers(stage.parts), ...extraParts].slice(0, limit));
+}
+
 const stages = [
   {
     id: "bouquet",
@@ -124,6 +132,9 @@ const stages = [
   }
 ];
 
+const baseStages = stages.splice(0, stages.length);
+const [bouquetStage, fishStage, rocketStage] = baseStages;
+
 const bouquet50ExtraParts = [
   { kind: "circle", cx: 82, cy: 82, r: 28, label: [82, 82], color: "#c9f2fb" },
   { kind: "star", cx: 260, cy: 70, r1: 30, r2: 14, points: 5, label: [260, 70], color: "#fff099" },
@@ -142,14 +153,56 @@ const bouquet50ExtraParts = [
   { kind: "circle", cx: 450, cy: 44, r: 29, label: [450, 44], color: "#fff099" }
 ];
 
-stages.push({
-  id: "bouquet50",
-  name: "50まで",
-  parts: withNumbers([
-    ...stages[0].parts.map(({ number, ...part }) => part),
-    ...bouquet50ExtraParts
-  ])
-});
+const fish50ExtraParts = [
+  { kind: "circle", cx: 92, cy: 76, r: 28, label: [92, 76], color: "#e9fbff" },
+  { kind: "star", cx: 300, cy: 56, r1: 30, r2: 14, points: 5, label: [300, 56], color: "#ffe57b" },
+  { kind: "circle", cx: 545, cy: 58, r: 27, label: [545, 58], color: "#ffc2d7" },
+  { kind: "path", d: "M824 72 C852 102 836 128 824 140 C812 128 796 102 824 72Z", label: [824, 102], color: "#c9f2fb" },
+  { kind: "circle", cx: 90, cy: 226, r: 27, label: [90, 226], color: "#fff099" },
+  { kind: "star", cx: 830, cy: 310, r1: 30, r2: 14, points: 5, label: [830, 310], color: "#ffe57b" },
+  { kind: "circle", cx: 82, cy: 620, r: 28, label: [82, 620], color: "#c9f2fb" },
+  { kind: "path", d: "M330 600 C360 630 344 656 330 668 C316 656 300 630 330 600Z", label: [330, 632], color: "#ffc2d7" },
+  { kind: "star", cx: 545, cy: 635, r1: 30, r2: 14, points: 5, label: [545, 635], color: "#fff099" },
+  { kind: "circle", cx: 830, cy: 620, r: 29, label: [830, 620], color: "#e9fbff" },
+  { kind: "circle", cx: 350, cy: 214, r: 24, label: [350, 214], color: "#c9f2fb" },
+  { kind: "star", cx: 430, cy: 455, r1: 28, r2: 13, points: 5, label: [430, 455], color: "#ffe57b" },
+  { kind: "circle", cx: 560, cy: 455, r: 26, label: [620, 438], color: "#ffc2d7" },
+  { kind: "path", d: "M688 625 C716 654 700 674 688 680 C676 674 660 654 688 625Z", label: [688, 650], color: "#c9f2fb" },
+  { kind: "circle", cx: 126, cy: 330, r: 24, label: [126, 330], color: "#e9fbff" },
+  { kind: "star", cx: 670, cy: 74, r1: 29, r2: 14, points: 5, label: [670, 74], color: "#fff099" },
+  { kind: "circle", cx: 768, cy: 414, r: 25, label: [768, 414], color: "#ffc2d7" },
+  { kind: "path", d: "M220 622 C248 652 232 674 220 680 C208 674 192 652 220 622Z", label: [220, 650], color: "#c9f2fb" }
+];
+
+const rocket50ExtraParts = [
+  { kind: "circle", cx: 82, cy: 78, r: 28, label: [82, 78], color: "#c9f2fb" },
+  { kind: "star", cx: 364, cy: 62, r1: 30, r2: 14, points: 5, label: [364, 62], color: "#ffe57b" },
+  { kind: "circle", cx: 555, cy: 62, r: 28, label: [555, 62], color: "#ffc2d7" },
+  { kind: "star", cx: 818, cy: 92, r1: 31, r2: 15, points: 5, label: [818, 92], color: "#fff099" },
+  { kind: "path", d: "M85 185 C114 214 98 242 85 254 C72 242 56 214 85 185Z", label: [85, 216], color: "#e9fbff" },
+  { kind: "circle", cx: 820, cy: 285, r: 28, label: [820, 285], color: "#c9f2fb" },
+  { kind: "star", cx: 82, cy: 590, r1: 31, r2: 15, points: 5, label: [82, 590], color: "#ffe57b" },
+  { kind: "circle", cx: 260, cy: 628, r: 28, label: [260, 628], color: "#ffc2d7" },
+  { kind: "path", d: "M700 616 C728 646 712 674 700 680 C688 674 672 646 700 616Z", label: [700, 644], color: "#e9fbff" },
+  { kind: "circle", cx: 830, cy: 610, r: 28, label: [830, 610], color: "#fff099" },
+  { kind: "circle", cx: 600, cy: 356, r: 24, label: [600, 356], color: "#c9f2fb" },
+  { kind: "star", cx: 330, cy: 452, r1: 27, r2: 13, points: 5, label: [285, 455], color: "#fff099" },
+  { kind: "circle", cx: 620, cy: 466, r: 25, label: [620, 466], color: "#ffc2d7" },
+  { kind: "star", cx: 238, cy: 72, r1: 29, r2: 14, points: 5, label: [238, 72], color: "#ffe57b" },
+  { kind: "circle", cx: 112, cy: 470, r: 26, label: [112, 470], color: "#c9f2fb" },
+  { kind: "path", d: "M785 170 C812 198 798 224 785 236 C772 224 758 198 785 170Z", label: [785, 200], color: "#ffc2d7" },
+  { kind: "circle", cx: 405, cy: 650, r: 24, label: [405, 650], color: "#e9fbff" },
+  { kind: "star", cx: 500, cy: 650, r1: 27, r2: 13, points: 5, label: [500, 650], color: "#fff099" }
+];
+
+stages.push(
+  { id: "bouquet30", name: "はなたば 30まで", parts: makeModeParts(bouquetStage, 30) },
+  { id: "bouquet50", name: "はなたば 50まで", parts: makeModeParts(bouquetStage, 50, bouquet50ExtraParts) },
+  { id: "fish30", name: "おさかな 30まで", parts: makeModeParts(fishStage, 30) },
+  { id: "fish50", name: "おさかな 50まで", parts: makeModeParts(fishStage, 50, fish50ExtraParts) },
+  { id: "rocket30", name: "ロケット 30まで", parts: makeModeParts(rocketStage, 30) },
+  { id: "rocket50", name: "ロケット 50まで", parts: makeModeParts(rocketStage, 50, rocket50ExtraParts) }
+);
 
 let currentStageIndex = 0;
 let parts = stages[currentStageIndex].parts;
