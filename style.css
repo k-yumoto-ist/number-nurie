@@ -79,29 +79,35 @@ h1 {
 .stage-picker {
   width: min(980px, 100%);
   margin: 0 auto;
-  display: flex;
-  gap: 10px;
-  overflow-x: auto;
-  padding: 2px 2px 8px;
-  scrollbar-width: none;
+  display: grid;
+  gap: 8px;
+  padding: 2px 0 8px;
 }
 
-.stage-picker::-webkit-scrollbar {
-  display: none;
+.stage-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.count-row {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .stage-button {
-  flex: 0 0 auto;
+  width: 100%;
   min-height: 50px;
   border: 4px solid #ffffff;
-  border-radius: 999px;
+  border-radius: 18px;
   background: rgba(255, 255, 255, 0.82);
   color: #527585;
   box-shadow: 0 6px 14px rgba(87, 145, 160, 0.16);
   cursor: pointer;
-  font-size: clamp(17px, 3.4vw, 22px);
-  padding: 8px 18px;
+  font-size: clamp(16px, 3.3vw, 22px);
+  line-height: 1.12;
+  padding: 8px 10px;
   touch-action: manipulation;
+  white-space: nowrap;
 }
 
 .stage-button.is-active {
@@ -369,6 +375,17 @@ h1 {
 
   .stage-picker {
     width: 100%;
+  }
+
+  .stage-row {
+    gap: 6px;
+  }
+
+  .stage-button {
+    min-height: 48px;
+    border-width: 3px;
+    border-radius: 16px;
+    padding-inline: 6px;
   }
 
   .picture {

@@ -196,13 +196,20 @@ const rocket50ExtraParts = [
 ];
 
 stages.push(
-  { id: "bouquet30", name: "はなたば 30まで", parts: makeModeParts(bouquetStage, 30) },
-  { id: "bouquet50", name: "はなたば 50まで", parts: makeModeParts(bouquetStage, 50, bouquet50ExtraParts) },
-  { id: "fish30", name: "おさかな 30まで", parts: makeModeParts(fishStage, 30) },
-  { id: "fish50", name: "おさかな 50まで", parts: makeModeParts(fishStage, 50, fish50ExtraParts) },
-  { id: "rocket30", name: "ロケット 30まで", parts: makeModeParts(rocketStage, 30) },
-  { id: "rocket50", name: "ロケット 50まで", parts: makeModeParts(rocketStage, 50, rocket50ExtraParts) }
+  { id: "bouquet30", picture: "bouquet", count: 30, name: "はなたば 30まで", parts: makeModeParts(bouquetStage, 30) },
+  { id: "bouquet50", picture: "bouquet", count: 50, name: "はなたば 50まで", parts: makeModeParts(bouquetStage, 50, bouquet50ExtraParts) },
+  { id: "fish30", picture: "fish", count: 30, name: "おさかな 30まで", parts: makeModeParts(fishStage, 30) },
+  { id: "fish50", picture: "fish", count: 50, name: "おさかな 50まで", parts: makeModeParts(fishStage, 50, fish50ExtraParts) },
+  { id: "rocket30", picture: "rocket", count: 30, name: "ロケット 30まで", parts: makeModeParts(rocketStage, 30) },
+  { id: "rocket50", picture: "rocket", count: 50, name: "ロケット 50まで", parts: makeModeParts(rocketStage, 50, rocket50ExtraParts) }
 );
+
+const pictureOptions = [
+  { id: "bouquet", label: "はなたば" },
+  { id: "fish", label: "おさかな" },
+  { id: "rocket", label: "ロケット" }
+];
+const countOptions = [30, 50];
 
 let currentStageIndex = 0;
 let parts = stages[currentStageIndex].parts;
@@ -211,7 +218,8 @@ let nextNumber = 1;
 const partsLayer = document.querySelector("#partsLayer");
 const labelsLayer = document.querySelector("#labelsLayer");
 const sparklesLayer = document.querySelector("#sparkles");
-const stagePicker = document.querySelector("#stagePicker");
+const picturePicker = document.querySelector("#picturePicker");
+const countPicker = document.querySelector("#countPicker");
 const nextLabelEl = document.querySelector("#nextLabel");
 const nextNumberEl = document.querySelector("#nextNumber");
 const messageEl = document.querySelector("#message");
@@ -256,15 +264,28 @@ function buildShape(part) {
 }
 
 function renderStageButtons() {
-  stagePicker.replaceChildren();
-  stages.forEach((stage, index) => {
+  const currentStage = stages[currentStageIndex];
+  picturePicker.replaceChildren();
+  countPicker.replaceChildren();
+
+  pictureOptions.forEach((option) => {
     const button = document.createElement("button");
     button.type = "button";
-    button.className = `stage-button${index === currentStageIndex ? " is-active" : ""}`;
-    button.textContent = stage.name;
-    button.setAttribute("aria-pressed", index === currentStageIndex ? "true" : "false");
-    button.addEventListener("click", () => loadStage(index));
-    stagePicker.append(button);
+    button.className = `stage-button${option.id === currentStage.picture ? " is-active" : ""}`;
+    button.textContent = option.label;
+    button.setAttribute("aria-pressed", option.id === currentStage.picture ? "true" : "false");
+    button.addEventListener("click", () => loadStage(option.id, currentStage.count));
+    picturePicker.append(button);
+  });
+
+  countOptions.forEach((count) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `stage-button${count === currentStage.count ? " is-active" : ""}`;
+    button.textContent = `${count}まで`;
+    button.setAttribute("aria-pressed", count === currentStage.count ? "true" : "false");
+    button.addEventListener("click", () => loadStage(currentStage.picture, count));
+    countPicker.append(button);
   });
 }
 
@@ -403,7 +424,9 @@ function resetGame() {
   updateStatus("1ばんを さがしてね");
 }
 
-function loadStage(index) {
+function loadStage(picture, count) {
+  const index = stages.findIndex((stage) => stage.picture === picture && stage.count === count);
+  if (index < 0) return;
   if (index === currentStageIndex) return;
   currentStageIndex = index;
   parts = stages[currentStageIndex].parts;
