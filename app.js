@@ -487,7 +487,7 @@ function renderParts() {
       role: "button",
       "data-number": part.number
     });
-    const badgeRadius = part.number >= 10 ? 24 : 22;
+    const badgeRadius = part.number >= 10 ? 26 : 24;
     const badge = createSvgElement("circle", {
       class: "number-badge",
       cx: labelX,
@@ -498,7 +498,7 @@ function renderParts() {
       class: "number-hit",
       cx: labelX,
       cy: labelY,
-      r: 34
+      r: 40
     });
     const label = createSvgElement("text", {
       class: "part-label",
