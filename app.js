@@ -25,6 +25,11 @@ const stageViews = {
   fish: "128 54 704 610",
   rocket: "126 48 648 620"
 };
+const mobileStageViews = {
+  bouquet: "58 28 792 642",
+  fish: "82 48 788 616",
+  rocket: "126 48 648 620"
+};
 
 const palette = {
   pink: ["#ff9fc2", "#ffc2d7", "#ff8db6", "#ffaecb"],
@@ -392,6 +397,15 @@ const nextLabelEl = document.querySelector("#nextLabel");
 const nextNumberEl = document.querySelector("#nextNumber");
 const messageEl = document.querySelector("#message");
 const resetButton = document.querySelector("#resetButton");
+const mobileViewQuery = window.matchMedia("(max-width: 720px)");
+
+function applyStageView() {
+  const currentStage = stages[currentStageIndex];
+  const viewSet = mobileViewQuery.matches ? mobileStageViews : stageViews;
+  pictureSvg.setAttribute("viewBox", viewSet[currentStage.picture]);
+}
+
+mobileViewQuery.addEventListener("change", applyStageView);
 
 function createSvgElement(name, attributes = {}) {
   const element = document.createElementNS(SVG_NS, name);
@@ -435,7 +449,7 @@ function renderStageButtons() {
   const currentStage = stages[currentStageIndex];
   document.body.dataset.count = String(currentStage.count);
   document.body.dataset.picture = currentStage.picture;
-  pictureSvg.setAttribute("viewBox", stageViews[currentStage.picture]);
+  applyStageView();
   picturePicker.replaceChildren();
   countPicker.replaceChildren();
 
