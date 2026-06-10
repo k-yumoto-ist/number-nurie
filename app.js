@@ -124,6 +124,33 @@ const stages = [
   }
 ];
 
+const bouquet50ExtraParts = [
+  { kind: "circle", cx: 82, cy: 82, r: 28, label: [82, 82], color: "#c9f2fb" },
+  { kind: "star", cx: 260, cy: 70, r1: 30, r2: 14, points: 5, label: [260, 70], color: "#fff099" },
+  { kind: "circle", cx: 612, cy: 58, r: 28, label: [612, 58], color: "#ffc2d7" },
+  { kind: "star", cx: 820, cy: 92, r1: 32, r2: 15, points: 5, label: [820, 92], color: "#ffe57b" },
+  { kind: "path", d: "M88 205 C118 236 102 280 88 294 C74 280 58 236 88 205Z", label: [88, 235], color: "#e9fbff" },
+  { kind: "circle", cx: 95, cy: 360, r: 30, label: [95, 360], color: "#fff099" },
+  { kind: "star", cx: 82, cy: 600, r1: 32, r2: 15, points: 5, label: [82, 600], color: "#ffe57b" },
+  { kind: "circle", cx: 302, cy: 628, r: 29, label: [302, 628], color: "#c9f2fb" },
+  { kind: "star", cx: 570, cy: 622, r1: 31, r2: 15, points: 5, label: [570, 622], color: "#fff099" },
+  { kind: "path", d: "M728 590 C758 620 742 646 728 656 C714 646 698 620 728 590Z", label: [728, 620], color: "#ffc2d7" },
+  { kind: "circle", cx: 824, cy: 572, r: 30, label: [824, 572], color: "#c9f2fb" },
+  { kind: "star", cx: 824, cy: 350, r1: 31, r2: 15, points: 5, label: [824, 350], color: "#ffe57b" },
+  { kind: "circle", cx: 820, cy: 210, r: 29, label: [820, 210], color: "#e9fbff" },
+  { kind: "path", d: "M700 14 C730 44 714 72 700 84 C686 72 670 44 700 14Z", label: [700, 36], color: "#ffc2d7" },
+  { kind: "circle", cx: 450, cy: 44, r: 29, label: [450, 44], color: "#fff099" }
+];
+
+stages.push({
+  id: "bouquet50",
+  name: "50まで",
+  parts: withNumbers([
+    ...stages[0].parts.map(({ number, ...part }) => part),
+    ...bouquet50ExtraParts
+  ])
+});
+
 let currentStageIndex = 0;
 let parts = stages[currentStageIndex].parts;
 let nextNumber = 1;
