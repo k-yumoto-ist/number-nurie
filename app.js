@@ -1,215 +1,377 @@
 const SVG_NS = "http://www.w3.org/2000/svg";
 
+const copy = {
+  appName: "\u3059\u3046\u3058\u30b7\u30fc\u30eb",
+  next: "\u3064\u304e\u306f",
+  doneLabel: "\u3084\u3063\u305f\u306d",
+  complete: "\u3067\u304d\u305f\uff01",
+  completeShort: "\u304b\u3093\u305b\u3044",
+  findFirst: "1\u3070\u3093\u3092 \u3055\u304c\u3057\u3066\u306d",
+  findNumber: (number) => `${number}\u3070\u3093\u3092 \u3055\u304c\u3057\u3066\u306d`,
+  nextNumber: (number) => `${number}\u3070\u3093`,
+  wrong: (number) => `${number}\u3070\u3093\u3060\u3088`,
+  sticker: "\u307a\u305f\u3063",
+  countLabel: (count) => `${count}\u307e\u3067`
+};
+
+const pictureOptions = [
+  { id: "bouquet", label: "\u306f\u306a\u305f\u3070" },
+  { id: "fish", label: "\u304a\u3055\u304b\u306a" },
+  { id: "rocket", label: "\u30ed\u30b1\u30c3\u30c8" }
+];
+const countOptions = [30, 50];
+
+const palette = {
+  pink: ["#ff9fc2", "#ffc2d7", "#ff8db6", "#ffaecb"],
+  yellow: ["#ffe57b", "#fff099", "#ffd36b"],
+  green: ["#b9e983", "#a6dc6e", "#c7f08f", "#9fdd71"],
+  blue: ["#c9f2fb", "#e9fbff", "#9be8f5"],
+  white: ["#ffffff", "#f8fbfc"]
+};
+
 function withNumbers(parts) {
   return parts.map((part, index) => ({ ...part, number: index + 1 }));
 }
 
-function withoutNumbers(parts) {
-  return parts.map(({ number, ...part }) => part);
+function spreadLabels(parts) {
+  const minDistance = 62;
+  const labels = parts.map((part) => ({
+    anchor: [...part.label],
+    label: [...part.label]
+  }));
+
+  for (let iteration = 0; iteration < 120; iteration += 1) {
+    for (let i = 0; i < labels.length; i += 1) {
+      for (let j = i + 1; j < labels.length; j += 1) {
+        const a = labels[i].label;
+        const b = labels[j].label;
+        let dx = b[0] - a[0];
+        let dy = b[1] - a[1];
+        let distance = Math.hypot(dx, dy);
+        if (distance === 0) {
+          dx = 1;
+          dy = 0;
+          distance = 1;
+        }
+        if (distance < minDistance) {
+          const push = (minDistance - distance) / 2;
+          const nx = dx / distance;
+          const ny = dy / distance;
+          a[0] -= nx * push;
+          a[1] -= ny * push;
+          b[0] += nx * push;
+          b[1] += ny * push;
+        }
+      }
+    }
+
+    labels.forEach((entry) => {
+      entry.label[0] += (entry.anchor[0] - entry.label[0]) * 0.025;
+      entry.label[1] += (entry.anchor[1] - entry.label[1]) * 0.025;
+      entry.label[0] = Math.min(844, Math.max(56, entry.label[0]));
+      entry.label[1] = Math.min(642, Math.max(42, entry.label[1]));
+    });
+  }
+
+  return parts.map((part, index) => ({
+    ...part,
+    label: labels[index].label.map((value) => Math.round(value))
+  }));
 }
 
-function makeModeParts(stage, limit, extraParts = []) {
-  return withNumbers([...withoutNumbers(stage.parts), ...extraParts].slice(0, limit));
+function finalizeParts(parts, limit) {
+  return withNumbers(spreadLabels(parts.slice(0, limit)));
+}
+
+function degToRad(degrees) {
+  return (degrees * Math.PI) / 180;
+}
+
+function point(cx, cy, angle, distance) {
+  const rad = degToRad(angle);
+  return [Math.round(cx + Math.cos(rad) * distance), Math.round(cy + Math.sin(rad) * distance)];
+}
+
+function cycle(items, index) {
+  return items[index % items.length];
+}
+
+function circle(cx, cy, r, color, label = [cx, cy]) {
+  return { kind: "circle", cx, cy, r, label, color };
+}
+
+function ellipse(cx, cy, rx, ry, rotate, color, label = [cx, cy]) {
+  return { kind: "ellipse", cx, cy, rx, ry, rotate, label, color };
+}
+
+function path(d, label, color, options = {}) {
+  return { kind: "path", d, label, color, ...options };
+}
+
+function star(cx, cy, r1, r2, color, label = [cx, cy]) {
+  return { kind: "star", cx, cy, r1, r2, points: 5, label, color };
+}
+
+function drop(cx, cy, scale, color, label = [cx, cy]) {
+  return path(
+    `M${cx} ${cy - 30 * scale} C${cx + 34 * scale} ${cy + 2 * scale} ${cx + 16 * scale} ${cy + 38 * scale} ${cx} ${cy + 48 * scale} C${cx - 16 * scale} ${cy + 38 * scale} ${cx - 34 * scale} ${cy + 2 * scale} ${cx} ${cy - 30 * scale}Z`,
+    label,
+    color
+  );
+}
+
+function arcPanel(cx, cy, inner, outer, start, end, color, label) {
+  const [x1, y1] = point(cx, cy, start, outer);
+  const [x2, y2] = point(cx, cy, end, outer);
+  const [x3, y3] = point(cx, cy, end, inner);
+  const [x4, y4] = point(cx, cy, start, inner);
+  const large = end - start > 180 ? 1 : 0;
+  return path(
+    `M${x1} ${y1} A${outer} ${outer} 0 ${large} 1 ${x2} ${y2} L${x3} ${y3} A${inner} ${inner} 0 ${large} 0 ${x4} ${y4}Z`,
+    label,
+    color
+  );
+}
+
+function roundedPanel(x, y, width, height, color, label) {
+  const r = Math.min(18, width / 4, height / 4);
+  return path(
+    `M${x + r} ${y} L${x + width - r} ${y} Q${x + width} ${y} ${x + width} ${y + r} L${x + width} ${y + height - r} Q${x + width} ${y + height} ${x + width - r} ${y + height} L${x + r} ${y + height} Q${x} ${y + height} ${x} ${y + height - r} L${x} ${y + r} Q${x} ${y} ${x + r} ${y}Z`,
+    label,
+    color
+  );
+}
+
+function flowerPetalPieces(cx, cy, angle, colorIndex, detailed) {
+  const colors = palette.pink;
+  const pieces = [];
+  const mid = point(cx, cy, angle, 92);
+  const tip = point(cx, cy, angle, 150);
+  pieces.push(ellipse(mid[0], mid[1], 38, 56, angle + 90, cycle(colors, colorIndex), mid));
+  pieces.push(ellipse(tip[0], tip[1], 34, 48, angle + 90, cycle(colors, colorIndex + 1), tip));
+  if (detailed) {
+    const side = point(cx, cy, angle + 13, 122);
+    pieces.push(ellipse(side[0], side[1], 24, 40, angle + 100, cycle(colors, colorIndex + 2), side));
+  }
+  return pieces;
+}
+
+function smallFlower(cx, cy, startAngle, detailed, colorOffset) {
+  const pieces = [circle(cx, cy, 32, palette.yellow[0])];
+  for (let i = 0; i < 5; i += 1) {
+    const angle = startAngle + i * 72;
+    const p1 = point(cx, cy, angle, 58);
+    pieces.push(ellipse(p1[0], p1[1], 29, 42, angle + 90, cycle(palette.pink, i + colorOffset), p1));
+    if (detailed) {
+      const p2 = point(cx, cy, angle, 91);
+      pieces.push(ellipse(p2[0], p2[1], 23, 34, angle + 90, cycle(palette.pink, i + colorOffset + 1), p2));
+    }
+  }
+  return pieces;
+}
+
+function leafPieces(cx, cy, angle, colorIndex, detailed) {
+  const pieces = [];
+  const p1 = point(cx, cy, angle, 34);
+  pieces.push(ellipse(p1[0], p1[1], 34, 66, angle + 90, cycle(palette.green, colorIndex), p1));
+  if (detailed) {
+    const p2 = point(cx, cy, angle, 78);
+    pieces.push(ellipse(p2[0], p2[1], 28, 54, angle + 90, cycle(palette.green, colorIndex + 1), p2));
+  }
+  return pieces;
+}
+
+function createBouquetParts(detailed) {
+  const parts = [];
+  const cx = 450;
+  const cy = 230;
+
+  for (let i = 0; i < 8; i += 1) {
+    parts.push(...flowerPetalPieces(cx, cy, -90 + i * 45, i, detailed));
+  }
+
+  for (let i = 0; i < 6; i += 1) {
+    parts.push(arcPanel(cx, cy, 18, 68, i * 60 - 90, (i + 1) * 60 - 90, cycle(palette.yellow, i), point(cx, cy, i * 60 - 60, 44)));
+  }
+
+  parts.push(...smallFlower(238, 270, -90, detailed, 1));
+  parts.push(...smallFlower(664, 296, -90, detailed, 2));
+
+  parts.push(path("M450 360 C438 430 420 510 405 610", [424, 470], palette.green[1], { strokeOnly: true, width: 18 }));
+  parts.push(path("M245 342 C310 420 360 505 402 610", [306, 466], palette.green[0], { strokeOnly: true, width: 18 }));
+  parts.push(path("M658 368 C590 438 520 520 430 610", [594, 498], palette.green[2], { strokeOnly: true, width: 18 }));
+
+  parts.push(...leafPieces(326, 418, 122, 0, detailed));
+  parts.push(...leafPieces(492, 438, 38, 1, detailed));
+  parts.push(...leafPieces(584, 454, 118, 2, detailed));
+  parts.push(...leafPieces(404, 520, 58, 3, detailed));
+
+  parts.push(path("M350 592 C388 552 446 552 492 592 C450 626 390 626 350 592Z", [420, 586], palette.green[2]));
+
+  if (detailed) {
+    parts.push(circle(128, 126, 34, palette.blue[0]));
+    parts.push(star(762, 118, 32, 15, palette.yellow[0]));
+  }
+
+  return finalizeParts(parts, detailed ? 50 : 30);
+}
+
+function fishScale(x, y, width, height, color, label = [x + width / 2, y + height / 2]) {
+  const cx = x + width / 2;
+  const cy = y + height / 2;
+  return path(
+    `M${x + 8} ${cy} C${x + 22} ${y + 4} ${x + width - 18} ${y + 2} ${x + width - 6} ${cy} C${x + width - 18} ${y + height - 2} ${x + 22} ${y + height - 4} ${x + 8} ${cy}Z`,
+    [Math.round(label[0]), Math.round(label[1])],
+    color
+  );
+}
+
+function createFishParts(detailed) {
+  const parts = [];
+  const cols = detailed ? 6 : 5;
+  const rows = detailed ? 4 : 3;
+  const startX = 312;
+  const startY = 214;
+  const w = 64;
+  const h = 58;
+  for (let row = 0; row < rows; row += 1) {
+    for (let col = 0; col < cols; col += 1) {
+      const x = startX + col * 58 + (row % 2) * 20;
+      const y = startY + row * 52;
+      parts.push(fishScale(x, y, w, h, cycle([...palette.blue, ...palette.pink], row + col)));
+    }
+  }
+
+  parts.push(path("M635 210 C728 220 766 282 718 352 C688 396 628 388 598 338 C572 292 584 230 635 210Z", [668, 296], palette.yellow[0]));
+  parts.push(circle(704, 264, 31, palette.white[0], [704, 238]));
+  parts.push(circle(710, 260, 12, "#527585", [746, 266]));
+  parts.push(path("M716 326 C744 316 760 294 770 270", [766, 324], palette.pink[0], { strokeOnly: true, width: 12 }));
+  if (detailed) {
+    parts.push(path("M628 340 C662 365 700 362 725 330 C706 390 650 402 610 358Z", [670, 366], palette.pink[1]));
+    parts.push(path("M642 218 C670 198 708 214 730 246 C692 226 666 224 642 238Z", [688, 212], palette.blue[1]));
+  }
+
+  const tail = [
+    ["M306 292 L192 204 C210 278 210 342 192 416 Z", [248, 310], palette.pink[0]],
+    ["M306 292 C278 262 238 230 192 204 C206 274 246 300 306 292Z", [250, 252], palette.pink[1]],
+    ["M306 342 C276 368 236 394 192 416 C208 350 246 328 306 342Z", [250, 374], palette.pink[2]],
+    ["M258 294 C232 310 232 330 258 346 C224 350 198 328 204 306 C214 292 234 288 258 294Z", [222, 322], palette.pink[3]]
+  ];
+  tail.forEach(([d, label, color]) => parts.push(path(d, label, color)));
+  if (detailed) {
+    parts.push(path("M204 204 C170 246 166 288 192 326 C146 292 144 238 204 204Z", [178, 256], palette.yellow[1]));
+    parts.push(path("M192 326 C166 360 170 398 204 416 C144 394 146 342 192 326Z", [178, 380], palette.yellow[0]));
+  }
+
+  parts.push(path("M470 202 C430 136 548 134 552 214Z", [506, 176], palette.yellow[0]));
+  parts.push(path("M520 392 C472 456 604 462 590 374Z", [548, 424], palette.yellow[1]));
+  parts.push(path("M412 364 C378 420 444 438 476 374Z", [426, 404], palette.pink[0]));
+  parts.push(path("M590 364 C624 418 684 396 650 342Z", [634, 382], palette.pink[1]));
+  if (detailed) {
+    parts.push(path("M470 202 C486 168 530 164 552 214 C520 198 494 198 470 202Z", [522, 198], palette.yellow[2]));
+    parts.push(path("M520 392 C552 394 575 390 590 374 C584 432 540 436 520 392Z", [570, 410], palette.yellow[0]));
+    parts.push(path("M412 364 C404 390 416 406 442 414 C392 420 374 392 412 364Z", [404, 396], palette.pink[2]));
+    parts.push(path("M590 364 C618 356 640 348 650 342 C660 386 626 402 590 364Z", [630, 350], palette.pink[3]));
+  }
+
+  parts.push(path("M118 602 C146 528 112 456 142 392", [110, 526], palette.green[0], { strokeOnly: true, width: 17 }));
+  parts.push(ellipse(116, 460, 25, 54, -28, palette.green[1], [92, 442]));
+  parts.push(ellipse(160, 520, 24, 54, 32, palette.green[2], [184, 518]));
+  parts.push(circle(160, 140, 30, palette.blue[0]));
+  parts.push(circle(240, 118, 23, palette.blue[1]));
+  if (detailed) {
+    parts.push(fishScale(492, 426, 64, 52, palette.blue[1]));
+  }
+
+  return finalizeParts(parts, detailed ? 50 : 30);
+}
+
+function rocketBodyPanel(x1, x2, y1, y2, color, label) {
+  const slopeTop = Math.abs(y1 - 86) / 290;
+  const slopeBottom = Math.abs(y2 - 86) / 290;
+  const leftTop = 450 - 74 * Math.min(1, slopeTop);
+  const rightTop = 450 + 74 * Math.min(1, slopeTop);
+  const leftBottom = 450 - 88 * Math.min(1, slopeBottom);
+  const rightBottom = 450 + 88 * Math.min(1, slopeBottom);
+  const xa1 = Math.max(leftTop, x1);
+  const xb1 = Math.min(rightTop, x2);
+  const xa2 = Math.max(leftBottom, x1);
+  const xb2 = Math.min(rightBottom, x2);
+  return path(`M${xa1} ${y1} L${xb1} ${y1} L${xb2} ${y2} L${xa2} ${y2}Z`, label, color);
+}
+
+function createRocketParts(detailed) {
+  const parts = [];
+  parts.push(path("M450 72 C486 112 506 156 514 208 L386 208 C394 156 414 112 450 72Z", [450, 120], palette.pink[0]));
+  parts.push(path("M386 208 L514 208 L526 258 L374 258Z", [450, 234], palette.blue[0]));
+  if (detailed) {
+    parts.push(path("M414 116 C426 92 440 78 450 72 C440 120 436 154 436 208 L386 208 C392 166 402 136 414 116Z", [412, 160], palette.pink[1]));
+    parts.push(path("M486 116 C474 92 460 78 450 72 C460 120 464 154 464 208 L514 208 C508 166 498 136 486 116Z", [488, 160], palette.pink[2]));
+  }
+
+  const bodyRows = detailed ? [[258, 306], [306, 354], [354, 402], [402, 450]] : [[258, 318], [318, 378], [378, 438]];
+  const xBands = detailed ? [[364, 407], [407, 450], [450, 493], [493, 536]] : [[364, 421], [421, 479], [479, 536]];
+  bodyRows.forEach((row, rowIndex) => {
+    xBands.forEach((band, bandIndex) => {
+      parts.push(rocketBodyPanel(band[0], band[1], row[0], row[1], cycle([...palette.blue, ...palette.white], rowIndex + bandIndex), [Math.round((band[0] + band[1]) / 2), Math.round((row[0] + row[1]) / 2)]));
+    });
+  });
+
+  parts.push(circle(450, 284, 47, palette.yellow[0], [420, 284]));
+  parts.push(circle(450, 284, 25, palette.blue[1], [482, 284]));
+  parts.push(arcPanel(450, 284, 28, 50, -80, 80, palette.yellow[1], [450, 244]));
+  parts.push(arcPanel(450, 284, 28, 50, 100, 260, palette.yellow[2], [450, 324]));
+  if (detailed) {
+    parts.push(arcPanel(450, 284, 13, 27, 0, 180, palette.white[0], [430, 260]));
+    parts.push(arcPanel(450, 284, 13, 27, 180, 360, palette.white[1], [472, 308]));
+  }
+
+  parts.push(path("M364 360 L276 478 L364 438Z", [326, 412], palette.pink[0]));
+  parts.push(path("M536 360 L624 478 L536 438Z", [574, 412], palette.pink[1]));
+  parts.push(path("M300 444 L276 478 L364 438 L354 408Z", [328, 452], palette.pink[2]));
+  parts.push(path("M600 444 L624 478 L536 438 L546 408Z", [572, 452], palette.pink[3]));
+  if (detailed) {
+    parts.push(path("M364 360 L318 420 L354 408Z", [344, 388], palette.yellow[1]));
+    parts.push(path("M536 360 L582 420 L546 408Z", [556, 388], palette.yellow[2]));
+  }
+
+  parts.push(path("M392 450 L508 450 L492 492 L408 492Z", [450, 470], palette.green[0]));
+  parts.push(path("M408 492 L492 492 L468 540 L432 540Z", [450, 514], palette.yellow[0]));
+  parts.push(path("M432 540 L450 626 L468 540Z", [450, 576], palette.pink[0]));
+  parts.push(path("M398 508 C350 548 376 612 430 636 C412 586 424 544 450 508Z", [394, 584], palette.pink[1]));
+  parts.push(path("M502 508 C550 548 524 612 470 636 C488 586 476 544 450 508Z", [506, 584], palette.yellow[1]));
+  if (detailed) {
+    parts.push(path("M408 492 L450 492 L432 540Z", [426, 512], palette.yellow[2]));
+    parts.push(path("M450 492 L492 492 L468 540Z", [474, 512], palette.yellow[0]));
+    parts.push(path("M398 508 C370 544 376 584 410 610 C390 572 410 538 450 508Z", [382, 548], palette.pink[2]));
+    parts.push(path("M502 508 C530 544 524 584 490 610 C510 572 490 538 450 508Z", [518, 548], palette.yellow[2]));
+  }
+
+  parts.push(circle(326, 622, 27, palette.blue[1]));
+  parts.push(circle(386, 640, 27, palette.pink[1]));
+  parts.push(circle(514, 640, 27, palette.pink[2]));
+  parts.push(circle(574, 622, 27, palette.blue[1]));
+  parts.push(star(180, 114, 32, 15, palette.yellow[0]));
+  parts.push(circle(734, 164, 30, palette.blue[0]));
+  if (detailed) {
+    parts.push(star(270, 190, 28, 13, palette.yellow[1]));
+    parts.push(circle(712, 356, 28, palette.pink[1]));
+    parts.push(circle(450, 652, 24, palette.blue[1]));
+  }
+
+  return finalizeParts(parts, detailed ? 50 : 30);
 }
 
 const stages = [
-  {
-    id: "bouquet",
-    name: "はなたば",
-    parts: withNumbers([
-      { kind: "circle", cx: 450, cy: 230, r: 52, label: [450, 230], color: "#ffe57b" },
-      { kind: "ellipse", cx: 450, cy: 132, rx: 52, ry: 76, label: [450, 132], color: "#ff9fc2" },
-      { kind: "ellipse", cx: 526, cy: 162, rx: 48, ry: 72, rotate: 42, label: [526, 162], color: "#ffc2d7" },
-      { kind: "ellipse", cx: 555, cy: 238, rx: 50, ry: 74, rotate: 86, label: [555, 238], color: "#ff8db6" },
-      { kind: "ellipse", cx: 512, cy: 308, rx: 48, ry: 72, rotate: 132, label: [512, 308], color: "#ffaecb" },
-      { kind: "ellipse", cx: 430, cy: 326, rx: 50, ry: 74, rotate: 174, label: [430, 326], color: "#ff9fc2" },
-      { kind: "ellipse", cx: 362, cy: 280, rx: 48, ry: 72, rotate: 224, label: [362, 280], color: "#ffc2d7" },
-      { kind: "ellipse", cx: 344, cy: 198, rx: 50, ry: 74, rotate: 268, label: [344, 198], color: "#ff8db6" },
-      { kind: "ellipse", cx: 382, cy: 142, rx: 48, ry: 72, rotate: 316, label: [382, 142], color: "#ffaecb" },
-      { kind: "circle", cx: 244, cy: 254, r: 35, label: [244, 254], color: "#ffe57b" },
-      { kind: "ellipse", cx: 244, cy: 190, rx: 35, ry: 52, label: [244, 190], color: "#ffb0cb" },
-      { kind: "ellipse", cx: 294, cy: 230, rx: 34, ry: 50, rotate: 72, label: [294, 230], color: "#fca3c3" },
-      { kind: "ellipse", cx: 276, cy: 292, rx: 34, ry: 50, rotate: 144, label: [276, 292], color: "#ffc7dc" },
-      { kind: "ellipse", cx: 212, cy: 292, rx: 34, ry: 50, rotate: 216, label: [212, 292], color: "#fca3c3" },
-      { kind: "ellipse", cx: 194, cy: 230, rx: 34, ry: 50, rotate: 288, label: [194, 230], color: "#ffc7dc" },
-      { kind: "circle", cx: 660, cy: 284, r: 35, label: [660, 284], color: "#ffe57b" },
-      { kind: "ellipse", cx: 660, cy: 220, rx: 35, ry: 52, label: [660, 220], color: "#ffd36b" },
-      { kind: "ellipse", cx: 710, cy: 260, rx: 34, ry: 50, rotate: 72, label: [710, 260], color: "#fff099" },
-      { kind: "ellipse", cx: 692, cy: 322, rx: 34, ry: 50, rotate: 144, label: [692, 322], color: "#ffd36b" },
-      { kind: "ellipse", cx: 628, cy: 322, rx: 34, ry: 50, rotate: 216, label: [628, 322], color: "#fff099" },
-      { kind: "ellipse", cx: 610, cy: 260, rx: 34, ry: 50, rotate: 288, label: [610, 260], color: "#ffd36b" },
-      { kind: "path", d: "M450 362 C438 438 422 500 406 590", label: [428, 468], color: "#a6dc6e", strokeOnly: true, width: 18 },
-      { kind: "path", d: "M250 335 C310 405 362 482 402 590", label: [292, 456], color: "#b9e983", strokeOnly: true, width: 18 },
-      { kind: "path", d: "M655 365 C585 432 505 512 420 590", label: [598, 492], color: "#93d967", strokeOnly: true, width: 18 },
-      { kind: "ellipse", cx: 326, cy: 412, rx: 42, ry: 78, rotate: 122, label: [326, 412], color: "#b9e983" },
-      { kind: "ellipse", cx: 486, cy: 430, rx: 42, ry: 82, rotate: 38, label: [486, 430], color: "#a6dc6e" },
-      { kind: "ellipse", cx: 585, cy: 440, rx: 40, ry: 76, rotate: 118, label: [585, 440], color: "#c7f08f" },
-      { kind: "ellipse", cx: 390, cy: 508, rx: 38, ry: 74, rotate: 58, label: [390, 508], color: "#9fdd71" },
-      { kind: "ellipse", cx: 540, cy: 535, rx: 38, ry: 72, rotate: 126, label: [540, 535], color: "#b9e983" },
-      { kind: "path", d: "M356 588 C390 552 444 550 484 588 C446 622 391 624 356 588Z", label: [420, 584], color: "#c7f08f" },
-      { kind: "circle", cx: 140, cy: 118, r: 42, label: [140, 118], color: "#c9f2fb" },
-      { kind: "star", cx: 745, cy: 115, r1: 43, r2: 21, points: 5, label: [745, 115], color: "#ffe57b" },
-      { kind: "path", d: "M760 450 C800 405 840 452 807 505 C792 530 764 551 760 552 C756 551 728 530 713 505 C680 452 720 405 760 450Z", label: [760, 486], color: "#c9f2fb" },
-      { kind: "circle", cx: 132, cy: 462, r: 36, label: [132, 462], color: "#ffc2d7" },
-      { kind: "star", cx: 190, cy: 560, r1: 37, r2: 18, points: 5, label: [190, 560], color: "#fff099" }
-    ])
-  },
-  {
-    id: "fish",
-    name: "おさかな",
-    parts: withNumbers([
-      { kind: "ellipse", cx: 420, cy: 318, rx: 95, ry: 82, label: [420, 318], color: "#c9f2fb" },
-      { kind: "ellipse", cx: 520, cy: 305, rx: 88, ry: 78, rotate: -10, label: [520, 305], color: "#9be8f5" },
-      { kind: "ellipse", cx: 615, cy: 290, rx: 78, ry: 66, rotate: -8, label: [615, 290], color: "#c9f2fb" },
-      { kind: "circle", cx: 682, cy: 276, r: 42, label: [665, 296], color: "#ffe57b" },
-      { kind: "circle", cx: 698, cy: 262, r: 19, label: [704, 220], color: "#ffffff" },
-      { kind: "circle", cx: 703, cy: 260, r: 9, label: [744, 272], color: "#527585" },
-      { kind: "path", d: "M324 302 L214 222 C224 296 224 338 214 414 Z", label: [254, 316], color: "#ff9fc2" },
-      { kind: "path", d: "M324 302 C295 275 258 247 214 222 C224 296 260 320 324 302Z", label: [266, 265], color: "#ffc2d7" },
-      { kind: "path", d: "M324 338 C292 365 258 392 214 414 C225 344 262 322 324 338Z", label: [266, 374], color: "#ffaecb" },
-      { kind: "path", d: "M486 236 C438 160 560 162 548 242Z", label: [512, 205], color: "#ffe57b" },
-      { kind: "path", d: "M520 392 C465 456 600 465 588 374Z", label: [548, 420], color: "#fff099" },
-      { kind: "ellipse", cx: 462, cy: 306, rx: 20, ry: 72, rotate: -8, label: [458, 366], color: "#ffb7d0" },
-      { kind: "ellipse", cx: 532, cy: 300, rx: 19, ry: 70, rotate: -8, label: [532, 356], color: "#ffcfe0" },
-      { kind: "ellipse", cx: 602, cy: 292, rx: 18, ry: 62, rotate: -8, label: [606, 346], color: "#ffb7d0" },
-      { kind: "path", d: "M725 318 C746 310 762 294 772 270", label: [778, 326], color: "#ff9fc2", strokeOnly: true, width: 12 },
-      { kind: "circle", cx: 160, cy: 140, r: 35, label: [160, 140], color: "#c9f2fb" },
-      { kind: "circle", cx: 235, cy: 120, r: 25, label: [235, 120], color: "#e9fbff" },
-      { kind: "circle", cx: 745, cy: 145, r: 31, label: [745, 145], color: "#c9f2fb" },
-      { kind: "circle", cx: 795, cy: 215, r: 24, label: [795, 215], color: "#e9fbff" },
-      { kind: "path", d: "M122 590 C150 520 112 455 140 390", label: [102, 540], color: "#b9e983", strokeOnly: true, width: 19 },
-      { kind: "ellipse", cx: 118, cy: 456, rx: 28, ry: 58, rotate: -28, label: [92, 440], color: "#a6dc6e" },
-      { kind: "ellipse", cx: 158, cy: 514, rx: 26, ry: 58, rotate: 32, label: [182, 508], color: "#c7f08f" },
-      { kind: "path", d: "M750 600 C730 526 772 456 744 390", label: [724, 558], color: "#9fdd71", strokeOnly: true, width: 18 },
-      { kind: "ellipse", cx: 716, cy: 472, rx: 26, ry: 56, rotate: 30, label: [694, 440], color: "#b9e983" },
-      { kind: "ellipse", cx: 776, cy: 528, rx: 25, ry: 55, rotate: -32, label: [806, 522], color: "#c7f08f" },
-      { kind: "star", cx: 360, cy: 110, r1: 38, r2: 18, points: 5, label: [360, 110], color: "#ffe57b" },
-      { kind: "circle", cx: 470, cy: 112, r: 28, label: [470, 112], color: "#ffc2d7" },
-      { kind: "star", cx: 600, cy: 122, r1: 34, r2: 16, points: 5, label: [600, 122], color: "#fff099" },
-      { kind: "circle", cx: 258, cy: 550, r: 31, label: [258, 550], color: "#c9f2fb" },
-      { kind: "circle", cx: 640, cy: 560, r: 34, label: [640, 560], color: "#ffc2d7" },
-      { kind: "path", d: "M360 505 C430 535 520 534 600 500", label: [480, 520], color: "#ffe57b", strokeOnly: true, width: 16 },
-      { kind: "circle", cx: 438, cy: 510, r: 22, label: [420, 558], color: "#fff099" }
-    ])
-  },
-  {
-    id: "rocket",
-    name: "ロケット",
-    parts: withNumbers([
-      { kind: "path", d: "M450 78 C520 140 550 238 538 352 L362 352 C350 238 380 140 450 78Z", label: [412, 178], color: "#c9f2fb" },
-      { kind: "path", d: "M450 78 C482 122 500 170 506 224 L394 224 C400 170 418 122 450 78Z", label: [482, 132], color: "#ff9fc2" },
-      { kind: "circle", cx: 450, cy: 258, r: 52, label: [420, 262], color: "#ffe57b" },
-      { kind: "circle", cx: 450, cy: 258, r: 28, label: [482, 252], color: "#e9fbff" },
-      { kind: "path", d: "M362 352 L278 462 L362 432Z", label: [326, 410], color: "#ffb7d0" },
-      { kind: "path", d: "M538 352 L622 462 L538 432Z", label: [574, 410], color: "#ffb7d0" },
-      { kind: "path", d: "M392 352 L508 352 L492 430 L408 430Z", label: [450, 390], color: "#b9e983" },
-      { kind: "path", d: "M408 430 L492 430 L450 540Z", label: [450, 460], color: "#ffe57b" },
-      { kind: "path", d: "M430 430 L450 590 L470 430Z", label: [450, 540], color: "#ff9fc2" },
-      { kind: "path", d: "M398 446 C352 496 372 560 428 598 C414 540 426 492 450 446Z", label: [388, 512], color: "#ffc2d7" },
-      { kind: "path", d: "M502 446 C548 496 528 560 472 598 C486 540 474 492 450 446Z", label: [512, 512], color: "#ffd36b" },
-      { kind: "ellipse", cx: 384, cy: 292, rx: 20, ry: 62, label: [372, 236], color: "#ffffff" },
-      { kind: "ellipse", cx: 516, cy: 292, rx: 20, ry: 62, label: [516, 292], color: "#ffffff" },
-      { kind: "circle", cx: 182, cy: 112, r: 39, label: [182, 112], color: "#ffe57b" },
-      { kind: "star", cx: 286, cy: 166, r1: 32, r2: 15, points: 5, label: [286, 166], color: "#fff099" },
-      { kind: "star", cx: 655, cy: 118, r1: 38, r2: 18, points: 5, label: [655, 118], color: "#ffe57b" },
-      { kind: "circle", cx: 735, cy: 205, r: 33, label: [735, 205], color: "#c9f2fb" },
-      { kind: "circle", cx: 160, cy: 290, r: 28, label: [160, 290], color: "#ffc2d7" },
-      { kind: "star", cx: 244, cy: 360, r1: 35, r2: 17, points: 5, label: [244, 360], color: "#fff099" },
-      { kind: "circle", cx: 705, cy: 364, r: 30, label: [705, 364], color: "#ffc2d7" },
-      { kind: "circle", cx: 780, cy: 464, r: 35, label: [780, 464], color: "#c9f2fb" },
-      { kind: "star", cx: 175, cy: 505, r1: 36, r2: 17, points: 5, label: [175, 505], color: "#ffe57b" },
-      { kind: "path", d: "M312 606 C374 574 526 574 588 606", label: [450, 626], color: "#c9f2fb", strokeOnly: true, width: 18 },
-      { kind: "circle", cx: 320, cy: 602, r: 25, label: [320, 602], color: "#e9fbff" },
-      { kind: "circle", cx: 382, cy: 584, r: 29, label: [382, 584], color: "#ffc2d7" },
-      { kind: "circle", cx: 518, cy: 584, r: 29, label: [518, 584], color: "#ffc2d7" },
-      { kind: "circle", cx: 580, cy: 602, r: 25, label: [580, 602], color: "#e9fbff" },
-      { kind: "path", d: "M112 404 C160 384 202 385 246 410", label: [178, 400], color: "#b9e983", strokeOnly: true, width: 15 },
-      { kind: "path", d: "M652 528 C698 500 744 500 790 528", label: [720, 518], color: "#b9e983", strokeOnly: true, width: 15 },
-      { kind: "circle", cx: 612, cy: 250, r: 24, label: [612, 250], color: "#fff099" },
-      { kind: "circle", cx: 290, cy: 250, r: 24, label: [290, 250], color: "#fff099" },
-      { kind: "star", cx: 624, cy: 608, r1: 30, r2: 14, points: 5, label: [658, 620], color: "#ffe57b" }
-    ])
-  }
+  { id: "bouquet30", picture: "bouquet", count: 30, name: "\u306f\u306a\u305f\u3070 30\u307e\u3067", parts: createBouquetParts(false) },
+  { id: "bouquet50", picture: "bouquet", count: 50, name: "\u306f\u306a\u305f\u3070 50\u307e\u3067", parts: createBouquetParts(true) },
+  { id: "fish30", picture: "fish", count: 30, name: "\u304a\u3055\u304b\u306a 30\u307e\u3067", parts: createFishParts(false) },
+  { id: "fish50", picture: "fish", count: 50, name: "\u304a\u3055\u304b\u306a 50\u307e\u3067", parts: createFishParts(true) },
+  { id: "rocket30", picture: "rocket", count: 30, name: "\u30ed\u30b1\u30c3\u30c8 30\u307e\u3067", parts: createRocketParts(false) },
+  { id: "rocket50", picture: "rocket", count: 50, name: "\u30ed\u30b1\u30c3\u30c8 50\u307e\u3067", parts: createRocketParts(true) }
 ];
 
-const baseStages = stages.splice(0, stages.length);
-const [bouquetStage, fishStage, rocketStage] = baseStages;
-
-const bouquet50ExtraParts = [
-  { kind: "circle", cx: 82, cy: 82, r: 28, label: [82, 82], color: "#c9f2fb" },
-  { kind: "star", cx: 260, cy: 70, r1: 30, r2: 14, points: 5, label: [260, 70], color: "#fff099" },
-  { kind: "circle", cx: 612, cy: 58, r: 28, label: [612, 58], color: "#ffc2d7" },
-  { kind: "star", cx: 820, cy: 92, r1: 32, r2: 15, points: 5, label: [820, 92], color: "#ffe57b" },
-  { kind: "path", d: "M88 205 C118 236 102 280 88 294 C74 280 58 236 88 205Z", label: [88, 235], color: "#e9fbff" },
-  { kind: "circle", cx: 95, cy: 360, r: 30, label: [95, 360], color: "#fff099" },
-  { kind: "star", cx: 82, cy: 600, r1: 32, r2: 15, points: 5, label: [82, 600], color: "#ffe57b" },
-  { kind: "circle", cx: 302, cy: 628, r: 29, label: [302, 628], color: "#c9f2fb" },
-  { kind: "star", cx: 570, cy: 622, r1: 31, r2: 15, points: 5, label: [570, 622], color: "#fff099" },
-  { kind: "path", d: "M728 590 C758 620 742 646 728 656 C714 646 698 620 728 590Z", label: [728, 620], color: "#ffc2d7" },
-  { kind: "circle", cx: 824, cy: 572, r: 30, label: [824, 572], color: "#c9f2fb" },
-  { kind: "star", cx: 824, cy: 350, r1: 31, r2: 15, points: 5, label: [824, 350], color: "#ffe57b" },
-  { kind: "circle", cx: 820, cy: 210, r: 29, label: [820, 210], color: "#e9fbff" },
-  { kind: "path", d: "M700 14 C730 44 714 72 700 84 C686 72 670 44 700 14Z", label: [700, 36], color: "#ffc2d7" },
-  { kind: "circle", cx: 450, cy: 44, r: 29, label: [450, 44], color: "#fff099" }
-];
-
-const fish50ExtraParts = [
-  { kind: "circle", cx: 92, cy: 76, r: 28, label: [92, 76], color: "#e9fbff" },
-  { kind: "star", cx: 300, cy: 56, r1: 30, r2: 14, points: 5, label: [300, 56], color: "#ffe57b" },
-  { kind: "circle", cx: 545, cy: 58, r: 27, label: [545, 58], color: "#ffc2d7" },
-  { kind: "path", d: "M824 72 C852 102 836 128 824 140 C812 128 796 102 824 72Z", label: [824, 102], color: "#c9f2fb" },
-  { kind: "circle", cx: 90, cy: 226, r: 27, label: [90, 226], color: "#fff099" },
-  { kind: "star", cx: 830, cy: 310, r1: 30, r2: 14, points: 5, label: [830, 310], color: "#ffe57b" },
-  { kind: "circle", cx: 82, cy: 620, r: 28, label: [82, 620], color: "#c9f2fb" },
-  { kind: "path", d: "M330 600 C360 630 344 656 330 668 C316 656 300 630 330 600Z", label: [330, 632], color: "#ffc2d7" },
-  { kind: "star", cx: 545, cy: 635, r1: 30, r2: 14, points: 5, label: [545, 635], color: "#fff099" },
-  { kind: "circle", cx: 830, cy: 620, r: 29, label: [830, 620], color: "#e9fbff" },
-  { kind: "circle", cx: 350, cy: 214, r: 24, label: [350, 214], color: "#c9f2fb" },
-  { kind: "star", cx: 430, cy: 455, r1: 28, r2: 13, points: 5, label: [430, 455], color: "#ffe57b" },
-  { kind: "circle", cx: 560, cy: 455, r: 26, label: [620, 438], color: "#ffc2d7" },
-  { kind: "path", d: "M688 625 C716 654 700 674 688 680 C676 674 660 654 688 625Z", label: [688, 650], color: "#c9f2fb" },
-  { kind: "circle", cx: 126, cy: 330, r: 24, label: [126, 330], color: "#e9fbff" },
-  { kind: "star", cx: 670, cy: 74, r1: 29, r2: 14, points: 5, label: [670, 74], color: "#fff099" },
-  { kind: "circle", cx: 768, cy: 414, r: 25, label: [768, 414], color: "#ffc2d7" },
-  { kind: "path", d: "M220 622 C248 652 232 674 220 680 C208 674 192 652 220 622Z", label: [220, 650], color: "#c9f2fb" }
-];
-
-const rocket50ExtraParts = [
-  { kind: "circle", cx: 82, cy: 78, r: 28, label: [82, 78], color: "#c9f2fb" },
-  { kind: "star", cx: 364, cy: 62, r1: 30, r2: 14, points: 5, label: [364, 62], color: "#ffe57b" },
-  { kind: "circle", cx: 555, cy: 62, r: 28, label: [555, 62], color: "#ffc2d7" },
-  { kind: "star", cx: 818, cy: 92, r1: 31, r2: 15, points: 5, label: [818, 92], color: "#fff099" },
-  { kind: "path", d: "M85 185 C114 214 98 242 85 254 C72 242 56 214 85 185Z", label: [85, 216], color: "#e9fbff" },
-  { kind: "circle", cx: 820, cy: 285, r: 28, label: [820, 285], color: "#c9f2fb" },
-  { kind: "star", cx: 82, cy: 590, r1: 31, r2: 15, points: 5, label: [82, 590], color: "#ffe57b" },
-  { kind: "circle", cx: 260, cy: 628, r: 28, label: [260, 628], color: "#ffc2d7" },
-  { kind: "path", d: "M700 616 C728 646 712 674 700 680 C688 674 672 646 700 616Z", label: [700, 644], color: "#e9fbff" },
-  { kind: "circle", cx: 830, cy: 610, r: 28, label: [830, 610], color: "#fff099" },
-  { kind: "circle", cx: 600, cy: 356, r: 24, label: [600, 356], color: "#c9f2fb" },
-  { kind: "star", cx: 330, cy: 452, r1: 27, r2: 13, points: 5, label: [285, 455], color: "#fff099" },
-  { kind: "circle", cx: 620, cy: 466, r: 25, label: [620, 466], color: "#ffc2d7" },
-  { kind: "star", cx: 238, cy: 72, r1: 29, r2: 14, points: 5, label: [238, 72], color: "#ffe57b" },
-  { kind: "circle", cx: 112, cy: 470, r: 26, label: [112, 470], color: "#c9f2fb" },
-  { kind: "path", d: "M785 170 C812 198 798 224 785 236 C772 224 758 198 785 170Z", label: [785, 200], color: "#ffc2d7" },
-  { kind: "circle", cx: 405, cy: 650, r: 24, label: [405, 650], color: "#e9fbff" },
-  { kind: "star", cx: 500, cy: 650, r1: 27, r2: 13, points: 5, label: [500, 650], color: "#fff099" }
-];
-
-stages.push(
-  { id: "bouquet30", picture: "bouquet", count: 30, name: "はなたば 30まで", parts: makeModeParts(bouquetStage, 30) },
-  { id: "bouquet50", picture: "bouquet", count: 50, name: "はなたば 50まで", parts: makeModeParts(bouquetStage, 50, bouquet50ExtraParts) },
-  { id: "fish30", picture: "fish", count: 30, name: "おさかな 30まで", parts: makeModeParts(fishStage, 30) },
-  { id: "fish50", picture: "fish", count: 50, name: "おさかな 50まで", parts: makeModeParts(fishStage, 50, fish50ExtraParts) },
-  { id: "rocket30", picture: "rocket", count: 30, name: "ロケット 30まで", parts: makeModeParts(rocketStage, 30) },
-  { id: "rocket50", picture: "rocket", count: 50, name: "ロケット 50まで", parts: makeModeParts(rocketStage, 50, rocket50ExtraParts) }
-);
-
-const pictureOptions = [
-  { id: "bouquet", label: "はなたば" },
-  { id: "fish", label: "おさかな" },
-  { id: "rocket", label: "ロケット" }
-];
-const countOptions = [30, 50];
+globalThis.numberNurieStages = stages;
 
 let currentStageIndex = 0;
 let parts = stages[currentStageIndex].parts;
@@ -282,7 +444,7 @@ function renderStageButtons() {
     const button = document.createElement("button");
     button.type = "button";
     button.className = `stage-button${count === currentStage.count ? " is-active" : ""}`;
-    button.textContent = `${count}まで`;
+    button.textContent = copy.countLabel(count);
     button.setAttribute("aria-pressed", count === currentStage.count ? "true" : "false");
     button.addEventListener("click", () => loadStage(currentStage.picture, count));
     countPicker.append(button);
@@ -297,7 +459,7 @@ function renderParts() {
       class: "part",
       tabindex: "0",
       role: "button",
-      "aria-label": `${part.number}ばん`
+      "aria-label": copy.nextNumber(part.number)
     });
     group.dataset.number = String(part.number);
     group.style.setProperty("--part-color", part.color);
@@ -325,17 +487,18 @@ function renderParts() {
       role: "button",
       "data-number": part.number
     });
+    const badgeRadius = part.number >= 10 ? 24 : 22;
     const badge = createSvgElement("circle", {
       class: "number-badge",
       cx: labelX,
       cy: labelY,
-      r: part.number >= 10 ? 22 : 20
+      r: badgeRadius
     });
     const hitArea = createSvgElement("circle", {
       class: "number-hit",
       cx: labelX,
       cy: labelY,
-      r: 32
+      r: 34
     });
     const label = createSvgElement("text", {
       class: "part-label",
@@ -365,11 +528,23 @@ function renderSparkles() {
   });
 }
 
+function flashTinySparkle(group) {
+  const sparkle = createSvgElement("circle", {
+    class: "tap-spark",
+    cx: group.querySelector(".part-shape")?.getBBox?.().x || 450,
+    cy: group.querySelector(".part-shape")?.getBBox?.().y || 300,
+    r: 8
+  });
+  sparkle.setAttribute("fill", "#ffe57b");
+  sparklesLayer.append(sparkle);
+  window.setTimeout(() => sparkle.remove(), 460);
+}
+
 function updateStatus(text) {
   const isFinished = nextNumber > parts.length;
-  nextLabelEl.textContent = isFinished ? "やったね" : "つぎは";
-  nextNumberEl.textContent = isFinished ? "かんせい" : `${nextNumber}ばん`;
-  messageEl.textContent = text || (isFinished ? "できた！" : `${nextNumber}ばんを さがしてね`);
+  nextLabelEl.textContent = isFinished ? copy.doneLabel : copy.next;
+  nextNumberEl.textContent = isFinished ? copy.completeShort : copy.nextNumber(nextNumber);
+  messageEl.textContent = text || (isFinished ? copy.complete : copy.findNumber(nextNumber));
   messageEl.classList.toggle("is-finished", isFinished);
   document.querySelectorAll(".part").forEach((group) => {
     const number = Number(group.dataset.number);
@@ -389,26 +564,27 @@ function handlePick(number, group) {
 
   if (number !== nextNumber) {
     replayClass(group, "is-wrong");
-    updateStatus(`${nextNumber}ばんだよ`);
+    updateStatus(copy.wrong(nextNumber));
     return;
   }
 
   group.classList.add("is-done");
   document.querySelector(`.label-group[data-number="${number}"]`)?.classList.add("is-done");
   replayClass(group, "is-pop");
+  flashTinySparkle(group);
   nextNumber += 1;
 
   if (nextNumber > parts.length) {
-    updateStatus("できた！");
+    updateStatus(copy.complete);
     sparklesLayer.classList.remove("is-active");
     void sparklesLayer.getBoundingClientRect();
     sparklesLayer.classList.add("is-active");
     return;
   }
 
-  updateStatus("ぺたっ");
+  updateStatus(copy.sticker);
   window.setTimeout(() => {
-    if (nextNumber <= parts.length) updateStatus(`${nextNumber}ばんを さがしてね`);
+    if (nextNumber <= parts.length) updateStatus(copy.findNumber(nextNumber));
   }, 520);
 }
 
@@ -421,13 +597,12 @@ function resetGame() {
     group.classList.remove("is-done");
   });
   sparklesLayer.classList.remove("is-active");
-  updateStatus("1ばんを さがしてね");
+  updateStatus(copy.findFirst);
 }
 
 function loadStage(picture, count) {
   const index = stages.findIndex((stage) => stage.picture === picture && stage.count === count);
-  if (index < 0) return;
-  if (index === currentStageIndex) return;
+  if (index < 0 || index === currentStageIndex) return;
   currentStageIndex = index;
   parts = stages[currentStageIndex].parts;
   renderStageButtons();
