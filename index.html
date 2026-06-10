@@ -12,17 +12,16 @@
   <body>
     <main class="app" aria-live="polite">
       <header class="topbar">
-        <div>
+        <div class="brand">
           <p class="eyebrow">すうじシール</p>
           <h1>じゅんばんに ぺたっ</h1>
         </div>
+        <section class="stage-picker" aria-label="絵柄と数を選ぶ">
+          <div class="stage-row" id="picturePicker" aria-label="絵柄"></div>
+          <div class="stage-row count-row" id="countPicker" aria-label="数"></div>
+        </section>
         <button class="reset-button" type="button" id="resetButton">もういちど</button>
       </header>
-
-      <section class="stage-picker" aria-label="絵柄と数を選ぶ">
-        <div class="stage-row" id="picturePicker" aria-label="絵柄"></div>
-        <div class="stage-row count-row" id="countPicker" aria-label="数"></div>
-      </section>
 
       <section class="play-area" aria-label="数字の順番にシールを貼る絵">
         <div class="svg-wrap">
