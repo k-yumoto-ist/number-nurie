@@ -30,6 +30,7 @@ body {
 
 button {
   font: inherit;
+  appearance: none;
 }
 
 .app {
@@ -80,14 +81,15 @@ h1 {
   width: min(980px, 100%);
   margin: 0 auto;
   display: grid;
-  gap: 2px;
+  gap: 1px;
   padding: 0;
 }
 
 .stage-row {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 3px;
+  gap: 2px;
+  align-items: center;
 }
 
 .count-row {
@@ -96,24 +98,29 @@ h1 {
 
 .stage-button {
   width: 100%;
-  min-height: 18px;
-  border: 2px solid #ffffff;
-  border-radius: 8px;
+  height: 18px;
+  min-height: 0;
+  max-height: 18px;
+  border: 1px solid #ffffff;
+  border-radius: 7px;
   background: rgba(255, 255, 255, 0.82);
   color: #527585;
-  box-shadow: 0 2px 6px rgba(87, 145, 160, 0.12);
+  box-shadow: 0 1px 3px rgba(87, 145, 160, 0.1);
   cursor: pointer;
   font-size: clamp(10px, 2.25vw, 13px);
   line-height: 1;
-  padding: 1px 4px;
+  padding: 0 4px;
   touch-action: manipulation;
   white-space: nowrap;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .stage-button.is-active {
   background: #ffb7d0;
   color: #ffffff;
-  box-shadow: 0 2px 0 #e57ea7, 0 5px 8px rgba(87, 145, 160, 0.12);
+  box-shadow: 0 1px 0 #e57ea7, 0 3px 5px rgba(87, 145, 160, 0.1);
 }
 
 .reset-button:active {
@@ -139,7 +146,7 @@ h1 {
   display: block;
   width: 100%;
   height: 100%;
-  max-height: calc(100vh - 88px);
+  max-height: calc(100vh - 82px);
   overflow: visible;
 }
 
@@ -394,18 +401,19 @@ h1 {
   }
 
   .stage-row {
-    gap: 3px;
+    gap: 2px;
   }
 
   .stage-button {
-    min-height: 18px;
-    border-width: 2px;
-    border-radius: 7px;
+    height: 16px;
+    max-height: 16px;
+    border-width: 1px;
+    border-radius: 6px;
     padding-inline: 3px;
   }
 
   .picture {
-    max-height: calc(100vh - 100px);
+    max-height: calc(100vh - 92px);
   }
 
   .next-card,
@@ -422,7 +430,7 @@ h1 {
   }
 
   .eyebrow {
-    font-size: 15px;
+    font-size: 10px;
   }
 
   .reset-button {
