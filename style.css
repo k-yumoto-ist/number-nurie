@@ -39,8 +39,8 @@ button {
   min-height: 100dvh;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
-  gap: 2px;
-  padding: 2px clamp(3px, 1vw, 8px) 4px;
+  gap: 6px;
+  padding: 4px clamp(4px, 1vw, 8px) 6px;
 }
 
 .topbar {
@@ -137,10 +137,10 @@ h1 {
 }
 
 .play-area {
-  width: min(980px, 100vw);
+  width: min(980px, 100%);
   margin: 0 auto;
   display: grid;
-  place-items: start center;
+  place-items: stretch center;
   min-height: 0;
   align-self: stretch;
 }
@@ -150,9 +150,9 @@ h1 {
   height: 100%;
   min-height: 0;
   max-height: 100%;
-  aspect-ratio: 900 / 680;
+  aspect-ratio: 4 / 3;
   overflow: hidden;
-  border-radius: 26px;
+  border-radius: 24px;
 }
 
 .picture {
@@ -167,12 +167,6 @@ h1 {
   fill: url("#paperDots");
   stroke: #ffffff;
   stroke-width: 8;
-}
-
-.art-zoom {
-  transform-box: view-box;
-  transform-origin: center;
-  transform: scale(1.08);
 }
 
 .part {
@@ -231,6 +225,11 @@ h1 {
   stroke-linejoin: round;
 }
 
+body[data-count="50"] .part-label {
+  font-size: 28px;
+  stroke-width: 6;
+}
+
 .label-group {
   cursor: pointer;
   pointer-events: auto;
@@ -279,7 +278,7 @@ h1 {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
-  gap: 4px;
+  gap: 5px;
 }
 
 .next-card,
@@ -290,7 +289,7 @@ h1 {
 }
 
 .next-card {
-  min-height: 38px;
+  min-height: 36px;
   border-radius: 12px;
   display: flex;
   align-items: baseline;
@@ -312,7 +311,7 @@ h1 {
 }
 
 .message {
-  min-height: 38px;
+  min-height: 36px;
   border-radius: 12px;
   display: grid;
   place-items: center;
@@ -401,8 +400,8 @@ h1 {
 
 @media (max-width: 720px) {
   .app {
-    padding-top: 2px;
-    gap: 2px;
+    padding-top: 3px;
+    gap: 4px;
   }
 
   .topbar {
@@ -447,8 +446,8 @@ h1 {
   }
 
   .stage-button {
-    height: 15px;
-    max-height: 15px;
+    height: 17px;
+    max-height: 17px;
     border-width: 1px;
     border-radius: 6px;
     padding-inline: 3px;
@@ -459,17 +458,14 @@ h1 {
   }
 
   .svg-wrap {
-    height: min(62dvh, calc(100dvh - 96px));
+    height: 100%;
+    min-height: min(58dvh, 520px);
     aspect-ratio: auto;
-  }
-
-  .art-zoom {
-    transform: scale(1.03);
   }
 
   .next-card,
   .message {
-    min-height: 36px;
+    min-height: 34px;
     border-radius: 11px;
   }
 }

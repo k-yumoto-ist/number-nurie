@@ -20,6 +20,11 @@ const pictureOptions = [
   { id: "rocket", label: "\u30ed\u30b1\u30c3\u30c8" }
 ];
 const countOptions = [30, 50];
+const stageViews = {
+  bouquet: "92 34 720 636",
+  fish: "128 54 704 610",
+  rocket: "126 48 648 620"
+};
 
 const palette = {
   pink: ["#ff9fc2", "#ffc2d7", "#ff8db6", "#ffaecb"],
@@ -380,6 +385,7 @@ let nextNumber = 1;
 const partsLayer = document.querySelector("#partsLayer");
 const labelsLayer = document.querySelector("#labelsLayer");
 const sparklesLayer = document.querySelector("#sparkles");
+const pictureSvg = document.querySelector("#picture");
 const picturePicker = document.querySelector("#picturePicker");
 const countPicker = document.querySelector("#countPicker");
 const nextLabelEl = document.querySelector("#nextLabel");
@@ -427,6 +433,9 @@ function buildShape(part) {
 
 function renderStageButtons() {
   const currentStage = stages[currentStageIndex];
+  document.body.dataset.count = String(currentStage.count);
+  document.body.dataset.picture = currentStage.picture;
+  pictureSvg.setAttribute("viewBox", stageViews[currentStage.picture]);
   picturePicker.replaceChildren();
   countPicker.replaceChildren();
 
@@ -452,6 +461,7 @@ function renderStageButtons() {
 }
 
 function renderParts() {
+  const currentStage = stages[currentStageIndex];
   partsLayer.replaceChildren();
   labelsLayer.replaceChildren();
   parts.forEach((part) => {
@@ -487,7 +497,8 @@ function renderParts() {
       role: "button",
       "data-number": part.number
     });
-    const badgeRadius = part.number >= 10 ? 29 : 27;
+    const isChallenge = currentStage.count >= 50;
+    const badgeRadius = isChallenge ? (part.number >= 10 ? 23 : 21) : (part.number >= 10 ? 28 : 26);
     const badge = createSvgElement("circle", {
       class: "number-badge",
       cx: labelX,
@@ -498,7 +509,7 @@ function renderParts() {
       class: "number-hit",
       cx: labelX,
       cy: labelY,
-      r: 46
+      r: isChallenge ? 38 : 46
     });
     const label = createSvgElement("text", {
       class: "part-label",
