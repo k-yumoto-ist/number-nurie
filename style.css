@@ -37,17 +37,17 @@ button {
   min-height: 100vh;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
-  gap: 3px;
-  padding: 3px clamp(4px, 1.4vw, 10px) 5px;
+  gap: 2px;
+  padding: 2px clamp(3px, 1vw, 8px) 4px;
 }
 
 .topbar {
   width: min(980px, 100%);
   margin: 0 auto;
   display: grid;
-  grid-template-columns: auto minmax(150px, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
 }
 
 .brand {
@@ -85,7 +85,8 @@ h1 {
   width: 100%;
   margin: 0;
   display: grid;
-  gap: 1px;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: 2px;
   padding: 0;
   align-self: center;
 }
@@ -137,12 +138,15 @@ h1 {
   width: min(980px, 100%);
   margin: 0 auto;
   display: grid;
-  place-items: center;
+  place-items: start center;
   min-height: 0;
+  align-self: stretch;
 }
 
 .svg-wrap {
   width: 100%;
+  height: 100%;
+  min-height: min(58vh, 560px);
   max-height: 100%;
   aspect-ratio: 900 / 680;
 }
@@ -151,14 +155,20 @@ h1 {
   display: block;
   width: 100%;
   height: 100%;
-  max-height: calc(100vh - 68px);
+  max-height: none;
   overflow: visible;
 }
 
 .paper-bg {
   fill: url("#paperDots");
   stroke: #ffffff;
-  stroke-width: 10;
+  stroke-width: 8;
+}
+
+.art-zoom {
+  transform-box: view-box;
+  transform-origin: center;
+  transform: scale(1.12);
 }
 
 .part {
@@ -387,14 +397,14 @@ h1 {
 
 @media (max-width: 720px) {
   .app {
-    padding-top: 3px;
+    padding-top: 2px;
     gap: 2px;
   }
 
   .topbar {
-    grid-template-columns: 46px minmax(0, 1fr) 62px;
+    grid-template-columns: 34px minmax(0, 1fr) 50px;
     align-items: center;
-    gap: 3px;
+    gap: 2px;
   }
 
   h1 {
@@ -402,13 +412,14 @@ h1 {
   }
 
   .reset-button {
-    min-width: 60px;
-    min-height: 24px;
+    min-width: 48px;
+    min-height: 22px;
     padding-inline: 6px;
   }
 
   .stage-picker {
     width: 100%;
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
   }
 
   .stage-row {
@@ -416,15 +427,15 @@ h1 {
   }
 
   .stage-button {
-    height: 16px;
-    max-height: 16px;
+    height: 15px;
+    max-height: 15px;
     border-width: 1px;
     border-radius: 6px;
     padding-inline: 3px;
   }
 
   .picture {
-    max-height: calc(100vh - 70px);
+    max-height: none;
   }
 
   .next-card,
@@ -436,7 +447,7 @@ h1 {
 
 @media (max-width: 430px) {
   .topbar {
-    grid-template-columns: 40px minmax(0, 1fr) 56px;
+    grid-template-columns: 30px minmax(0, 1fr) 46px;
   }
 
   .eyebrow {
@@ -445,8 +456,8 @@ h1 {
   }
 
   .reset-button {
-    min-width: 54px;
+    min-width: 44px;
     font-size: 10px;
-    padding-inline: 4px;
+    padding-inline: 3px;
   }
 }
