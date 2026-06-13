@@ -87,7 +87,7 @@ h1 {
   width: 100%;
   margin: 0;
   display: grid;
-  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  grid-template-columns: minmax(0, 3fr) minmax(0, 5fr);
   gap: 2px;
   padding: 0;
   align-self: center;
@@ -101,7 +101,7 @@ h1 {
 }
 
 .count-row {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
 }
 
 .stage-button {
@@ -146,6 +146,7 @@ h1 {
 }
 
 .svg-wrap {
+  position: relative;
   width: 100%;
   height: 100%;
   min-height: 0;
@@ -228,6 +229,23 @@ h1 {
 body[data-count="50"] .part-label {
   font-size: 28px;
   stroke-width: 6;
+}
+
+body[data-scale-mode="large"] .part-label {
+  font-size: 19px;
+  stroke-width: 4.2;
+}
+
+body[data-scale-mode="large"] .number-badge {
+  stroke-width: 3;
+}
+
+body[data-scale-mode="large"] .part-shape {
+  stroke-width: 5.4;
+}
+
+body[data-scale-mode="large"] .part.is-current .part-shape {
+  stroke-width: 7;
 }
 
 .label-group {
@@ -341,6 +359,46 @@ body[data-count="50"] .part-label {
   animation: sparkle 900ms ease-out forwards;
 }
 
+.zoom-controls {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border: 2px solid rgba(255, 255, 255, 0.92);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.76);
+  box-shadow: 0 4px 12px rgba(87, 145, 160, 0.14);
+}
+
+.zoom-controls[hidden] {
+  display: none;
+}
+
+.zoom-button {
+  min-width: 32px;
+  height: 30px;
+  border: 0;
+  border-radius: 999px;
+  background: #c9f2fb;
+  color: #376070;
+  font-size: 16px;
+  font-weight: 900;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 2px 0 #8dcddd;
+  touch-action: manipulation;
+}
+
+.zoom-reset {
+  min-width: 48px;
+  background: #ffe57b;
+  color: #4f6b35;
+  font-size: 12px;
+}
+
 .sparkle:nth-child(2n) {
   animation-delay: 80ms;
 }
@@ -451,6 +509,11 @@ body[data-count="50"] .part-label {
     border-width: 1px;
     border-radius: 6px;
     padding-inline: 3px;
+    font-size: clamp(8px, 2.1vw, 11px);
+  }
+
+  .count-row {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 
   .picture {
@@ -461,6 +524,24 @@ body[data-count="50"] .part-label {
     height: 100%;
     min-height: min(58dvh, 520px);
     aspect-ratio: auto;
+  }
+
+  .zoom-controls {
+    top: 6px;
+    right: 6px;
+    gap: 3px;
+    padding: 3px;
+  }
+
+  .zoom-button {
+    min-width: 28px;
+    height: 27px;
+    font-size: 14px;
+  }
+
+  .zoom-reset {
+    min-width: 42px;
+    font-size: 10px;
   }
 
   .next-card,
