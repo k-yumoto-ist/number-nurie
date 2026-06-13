@@ -19,7 +19,7 @@ const pictureOptions = [
   { id: "fish", label: "\u304a\u3055\u304b\u306a" },
   { id: "rocket", label: "\u30ed\u30b1\u30c3\u30c8" }
 ];
-const countOptions = [30, 50, 100, 150, 200];
+const countOptions = [30, 50, 100];
 const stageViews = {
   bouquet: "92 34 720 636",
   fish: "128 54 704 610",
@@ -54,7 +54,7 @@ function withNumbers(parts) {
 }
 
 function spreadLabels(parts, minDistance = 72) {
-  const iterations = parts.length >= 150 ? 36 : parts.length >= 100 ? 48 : 160;
+  const iterations = parts.length >= 100 ? 48 : 160;
   const labels = parts.map((part) => ({
     anchor: [...part.label],
     label: [...part.label]
@@ -100,7 +100,7 @@ function spreadLabels(parts, minDistance = 72) {
 }
 
 function finalizeParts(parts, limit) {
-  const minDistance = limit >= 200 ? 22 : limit >= 150 ? 26 : limit >= 100 ? 32 : limit >= 50 ? 56 : 72;
+  const minDistance = limit >= 100 ? 32 : limit >= 50 ? 56 : 72;
   return withNumbers(spreadLabels(parts.slice(0, limit), minDistance));
 }
 
@@ -459,8 +459,8 @@ function createLargeFishParts(limit) {
   parts.push(path("M638 386 C676 426 728 410 758 362 C732 454 660 482 594 426Z", [680, 424], palette.pink[1]));
   parts.push(path("M638 172 C680 130 740 166 764 226 C722 198 676 192 638 216Z", [698, 174], palette.blue[1]));
 
-  const rows = limit >= 200 ? 10 : limit >= 150 ? 9 : 8;
-  const cols = limit >= 200 ? 13 : limit >= 150 ? 12 : 10;
+  const rows = 8;
+  const cols = 10;
   for (let row = 0; row < rows; row += 1) {
     for (let col = 0; col < cols; col += 1) {
       const x = 140 + col * 40 + (row % 2) * 18;
@@ -491,38 +491,6 @@ function createLargeFishParts(limit) {
     ["M552 436 C626 514 720 468 656 382Z", [628, 450], palette.pink[1]]
   ].forEach(([d, label, color]) => parts.push(path(d, label, color)));
 
-  if (limit >= 150) {
-    for (let i = 0; i < 22; i += 1) {
-      const x = 196 + (i % 11) * 42;
-      const y = 204 + Math.floor(i / 11) * 170 + (i % 2) * 12;
-      parts.push(fishScale(x, y, 48, 32, cycle(palette.blue, i), [x + 24, y + 16]));
-    }
-    for (let i = 0; i < 10; i += 1) {
-      const x = 236 + (i % 5) * 70;
-      const y = 176 + Math.floor(i / 5) * 250;
-      parts.push(fishScale(x, y, 44, 30, cycle(palette.pink, i), [x + 22, y + 15]));
-    }
-    parts.push(path("M312 154 C332 106 410 104 456 174 C402 154 354 150 312 154Z", [402, 146], palette.yellow[2]));
-    parts.push(path("M376 464 C422 470 492 468 528 454 C506 532 414 538 376 464Z", [472, 494], palette.yellow[0]));
-  }
-
-  if (limit >= 200) {
-    for (let i = 0; i < 34; i += 1) {
-      const x = 186 + (i % 17) * 31;
-      const y = 238 + Math.floor(i / 17) * 92 + (i % 2) * 10;
-      parts.push(fishScale(x, y, 42, 30, cycle([...palette.pink, ...palette.blue], i), [x + 21, y + 15]));
-    }
-    for (let i = 0; i < 12; i += 1) {
-      const x = 278 + (i % 6) * 50;
-      const y = 258 + Math.floor(i / 6) * 72;
-      parts.push(fishScale(x, y, 38, 28, cycle([...palette.yellow, ...palette.pink], i), [x + 19, y + 14]));
-    }
-    parts.push(circle(116, 104, 20, palette.blue[0]));
-    parts.push(circle(180, 84, 16, palette.blue[1]));
-    parts.push(circle(792, 512, 20, palette.blue[0]));
-    parts.push(ellipse(812, 588, 22, 50, 18, palette.green[1], [812, 574]));
-  }
-
   return finalizeParts(parts, limit);
 }
 
@@ -534,8 +502,8 @@ function createLargeRocketParts(limit) {
     parts.push(path(`M450 42 C${390 + i * 5} ${92 + i * 2} ${372 + i * 4} ${156 + i * 4} ${370 + i} ${start} L${530 - i} ${start} C${528 - i * 4} ${156 + i * 4} ${510 - i * 5} ${92 + i * 2} 450 42Z`, [450, 78 + i * 14], cycle(palette.pink, i)));
   }
 
-  const rows = limit >= 200 ? 13 : limit >= 150 ? 11 : 9;
-  const cols = limit >= 200 ? 7 : 6;
+  const rows = 9;
+  const cols = 6;
   for (let row = 0; row < rows; row += 1) {
     const y1 = 206 + row * 25;
     const y2 = y1 + 31;
@@ -566,34 +534,12 @@ function createLargeRocketParts(limit) {
   ].forEach(([d, label, color]) => parts.push(path(d, label, color)));
 
   parts.push(path("M360 462 L540 462 L520 512 L380 512Z", [450, 486], palette.green[0]));
-  const flameCount = limit >= 200 ? 34 : limit >= 150 ? 26 : 18;
+  const flameCount = 18;
   for (let i = 0; i < flameCount; i += 1) {
     const x = 330 + (i % 6) * 42 + (Math.floor(i / 6) % 2) * 20;
     const y = 506 + Math.floor(i / 6) * 38;
     const tip = 620 + Math.floor(i / 6) * 4;
     parts.push(path(`M${x} ${y} C${x + 24} ${y + 28} ${x + 10} ${tip - 12} ${x + 34} ${tip} C${x + 54} ${tip - 20} ${x + 58} ${y + 24} ${x + 78} ${y}Z`, [x + 40, y + 36], cycle([...palette.yellow, ...palette.pink], i)));
-  }
-
-  if (limit >= 150) {
-    for (let i = 0; i < 20; i += 1) {
-      parts.push(circle(256 + (i % 5) * 92, 602 + Math.floor(i / 5) * 18, 20 + (i % 3) * 3, cycle([...palette.blue, ...palette.pink], i)));
-    }
-    for (let i = 0; i < 10; i += 1) {
-      parts.push(path(`M${330 + i * 24} 504 C${346 + i * 22} 534 ${340 + i * 22} 588 ${356 + i * 21} 622 C${382 + i * 15} 586 ${382 + i * 14} 532 ${374 + i * 12} 504Z`, [354 + i * 20, 560], cycle([...palette.yellow, ...palette.pink], i)));
-    }
-  }
-  if (limit >= 200) {
-    for (let i = 0; i < 18; i += 1) {
-      parts.push(rocketBodyPanel(348 + (i % 6) * 34, 382 + (i % 6) * 34, 222 + Math.floor(i / 6) * 100, 244 + Math.floor(i / 6) * 100, cycle(palette.pink, i), [365 + (i % 6) * 34, 234 + Math.floor(i / 6) * 100]));
-    }
-    for (let i = 0; i < 10; i += 1) {
-      const x = 258 + (i % 5) * 96;
-      const y = 626 + Math.floor(i / 5) * 22;
-      parts.push(circle(x, y, 18 + (i % 3) * 2, cycle(palette.blue, i)));
-    }
-    parts.push(star(190, 126, 26, 12, palette.yellow[0]));
-    parts.push(circle(724, 146, 26, palette.blue[0]));
-    parts.push(star(748, 348, 24, 11, palette.yellow[1]));
   }
 
   return finalizeParts(parts, limit);
@@ -603,18 +549,12 @@ const stages = [
   { id: "bouquet30", picture: "bouquet", count: 30, name: "\u306f\u306a\u305f\u3070 30\u307e\u3067", createParts: () => createBouquetParts(false) },
   { id: "bouquet50", picture: "bouquet", count: 50, name: "\u306f\u306a\u305f\u3070 50\u307e\u3067", createParts: () => createBouquetParts(true) },
   { id: "bouquet100", picture: "bouquet", count: 100, name: "\u306f\u306a\u305f\u3070 \u304a\u304a\u304d\u3044 100", createParts: () => createLargeBouquetParts(100) },
-  { id: "bouquet150", picture: "bouquet", count: 150, name: "\u306f\u306a\u305f\u3070 \u304a\u304a\u304d\u3044 150", createParts: () => createLargeBouquetParts(150) },
-  { id: "bouquet200", picture: "bouquet", count: 200, name: "\u306f\u306a\u305f\u3070 \u304a\u304a\u304d\u3044 200", createParts: () => createLargeBouquetParts(200) },
   { id: "fish30", picture: "fish", count: 30, name: "\u304a\u3055\u304b\u306a 30\u307e\u3067", createParts: () => createFishParts(false) },
   { id: "fish50", picture: "fish", count: 50, name: "\u304a\u3055\u304b\u306a 50\u307e\u3067", createParts: () => createFishParts(true) },
   { id: "fish100", picture: "fish", count: 100, name: "\u304a\u3055\u304b\u306a \u304a\u304a\u304d\u3044 100", createParts: () => createLargeFishParts(100) },
-  { id: "fish150", picture: "fish", count: 150, name: "\u304a\u3055\u304b\u306a \u304a\u304a\u304d\u3044 150", createParts: () => createLargeFishParts(150) },
-  { id: "fish200", picture: "fish", count: 200, name: "\u304a\u3055\u304b\u306a \u304a\u304a\u304d\u3044 200", createParts: () => createLargeFishParts(200) },
   { id: "rocket30", picture: "rocket", count: 30, name: "\u30ed\u30b1\u30c3\u30c8 30\u307e\u3067", createParts: () => createRocketParts(false) },
   { id: "rocket50", picture: "rocket", count: 50, name: "\u30ed\u30b1\u30c3\u30c8 50\u307e\u3067", createParts: () => createRocketParts(true) },
-  { id: "rocket100", picture: "rocket", count: 100, name: "\u30ed\u30b1\u30c3\u30c8 \u304a\u304a\u304d\u3044 100", createParts: () => createLargeRocketParts(100) },
-  { id: "rocket150", picture: "rocket", count: 150, name: "\u30ed\u30b1\u30c3\u30c8 \u304a\u304a\u304d\u3044 150", createParts: () => createLargeRocketParts(150) },
-  { id: "rocket200", picture: "rocket", count: 200, name: "\u30ed\u30b1\u30c3\u30c8 \u304a\u304a\u304d\u3044 200", createParts: () => createLargeRocketParts(200) }
+  { id: "rocket100", picture: "rocket", count: 100, name: "\u30ed\u30b1\u30c3\u30c8 \u304a\u304a\u304d\u3044 100", createParts: () => createLargeRocketParts(100) }
 ];
 
 globalThis.numberNurieStages = stages;
@@ -631,7 +571,6 @@ let nextNumber = 1;
 const partsLayer = document.querySelector("#partsLayer");
 const labelsLayer = document.querySelector("#labelsLayer");
 const sparklesLayer = document.querySelector("#sparkles");
-const viewportLayer = document.querySelector("#viewportLayer");
 const pictureSvg = document.querySelector("#picture");
 const picturePicker = document.querySelector("#picturePicker");
 const countPicker = document.querySelector("#countPicker");
@@ -639,22 +578,7 @@ const nextLabelEl = document.querySelector("#nextLabel");
 const nextNumberEl = document.querySelector("#nextNumber");
 const messageEl = document.querySelector("#message");
 const resetButton = document.querySelector("#resetButton");
-const zoomControls = document.querySelector("#zoomControls");
-const zoomInButton = document.querySelector("#zoomInButton");
-const zoomOutButton = document.querySelector("#zoomOutButton");
-const zoomResetButton = document.querySelector("#zoomResetButton");
 const mobileViewQuery = window.matchMedia("(max-width: 720px)");
-let viewTransform = { scale: 1, x: 0, y: 0 };
-let dragState = null;
-let suppressNextPick = false;
-
-function isLargeStage() {
-  return stages[currentStageIndex].count >= 100;
-}
-
-function clamp(value, min, max) {
-  return Math.min(max, Math.max(min, value));
-}
 
 function applyStageView() {
   const currentStage = stages[currentStageIndex];
@@ -664,43 +588,7 @@ function applyStageView() {
   pictureSvg.setAttribute("viewBox", viewSet[currentStage.picture]);
 }
 
-function applyViewportTransform() {
-  const large = isLargeStage();
-  zoomControls.hidden = !large;
-  if (!large) viewTransform = { scale: 1, x: 0, y: 0 };
-  viewportLayer.setAttribute(
-    "transform",
-    `translate(${Math.round(viewTransform.x)} ${Math.round(viewTransform.y)}) scale(${viewTransform.scale})`
-  );
-}
-
-function resetView() {
-  viewTransform = { scale: 1, x: 0, y: 0 };
-  applyViewportTransform();
-}
-
-function zoomBy(factor) {
-  if (!isLargeStage()) return;
-  const nextScale = clamp(viewTransform.scale * factor, 1, 4);
-  viewTransform.x *= nextScale / viewTransform.scale;
-  viewTransform.y *= nextScale / viewTransform.scale;
-  viewTransform.scale = nextScale;
-  applyViewportTransform();
-}
-
-function clientDeltaToSvg(dx, dy) {
-  const rect = pictureSvg.getBoundingClientRect();
-  const viewBox = pictureSvg.viewBox.baseVal;
-  return {
-    x: (dx * viewBox.width) / rect.width / viewTransform.scale,
-    y: (dy * viewBox.height) / rect.height / viewTransform.scale
-  };
-}
-
-mobileViewQuery.addEventListener("change", () => {
-  applyStageView();
-  resetView();
-});
+mobileViewQuery.addEventListener("change", applyStageView);
 
 function createSvgElement(name, attributes = {}) {
   const element = document.createElementNS(SVG_NS, name);
@@ -746,7 +634,6 @@ function renderStageButtons() {
   document.body.dataset.picture = currentStage.picture;
   document.body.dataset.scaleMode = currentStage.count >= 100 ? "large" : "normal";
   applyStageView();
-  applyViewportTransform();
   picturePicker.replaceChildren();
   countPicker.replaceChildren();
 
@@ -887,10 +774,6 @@ function replayClass(element, className) {
 }
 
 function handlePick(number, group) {
-  if (suppressNextPick) {
-    suppressNextPick = false;
-    return;
-  }
   if (number < nextNumber || nextNumber > parts.length) return;
 
   if (number !== nextNumber) {
@@ -921,7 +804,6 @@ function handlePick(number, group) {
 
 function resetGame() {
   nextNumber = 1;
-  resetView();
   document.querySelectorAll(".part").forEach((group) => {
     group.classList.remove("is-done", "is-pop", "is-wrong");
   });
@@ -939,7 +821,6 @@ function loadStage(picture, count) {
   parts = getStageParts(stages[currentStageIndex]);
   renderStageButtons();
   renderParts();
-  resetView();
   resetGame();
 }
 
@@ -948,31 +829,3 @@ renderStageButtons();
 renderParts();
 updateStatus();
 resetButton.addEventListener("click", resetGame);
-zoomInButton.addEventListener("click", () => zoomBy(1.28));
-zoomOutButton.addEventListener("click", () => zoomBy(0.78));
-zoomResetButton.addEventListener("click", resetView);
-pictureSvg.addEventListener("pointerdown", (event) => {
-  if (!isLargeStage()) return;
-  pictureSvg.setPointerCapture(event.pointerId);
-  dragState = { id: event.pointerId, x: event.clientX, y: event.clientY, moved: false };
-});
-pictureSvg.addEventListener("pointermove", (event) => {
-  if (!dragState || dragState.id !== event.pointerId || !isLargeStage()) return;
-  const dx = event.clientX - dragState.x;
-  const dy = event.clientY - dragState.y;
-  if (Math.hypot(dx, dy) > 3) dragState.moved = true;
-  const delta = clientDeltaToSvg(dx, dy);
-  viewTransform.x += delta.x;
-  viewTransform.y += delta.y;
-  dragState.x = event.clientX;
-  dragState.y = event.clientY;
-  applyViewportTransform();
-});
-pictureSvg.addEventListener("pointerup", (event) => {
-  if (!dragState || dragState.id !== event.pointerId) return;
-  suppressNextPick = dragState.moved;
-  dragState = null;
-});
-pictureSvg.addEventListener("pointercancel", () => {
-  dragState = null;
-});
